@@ -1,7 +1,7 @@
 /* =========================================================================
  * 文件下载站 · app.js
  * 主数据源：同域 data.json（不占 API 额度）；备用 GitHub API。
- * 下载：通过 fetch → Blob → URL.createObjectURL 触发浏览器下载（跨域可用）。
+ * 下载：fetch → Blob → URL.createObjectURL 触发浏览器下载（跨域可用）。
  * ========================================================================= */
 
 const CONFIG = {
@@ -63,13 +63,14 @@ function setStatus(cls, text) {
 }
 
 // ---------- 核心：JS Blob 下载（解决跨域 download 属性失效问题） ----------
-async function downloadFile(relPath, name) {
+async function downloadFile(relPath, name, btn) {
   const rawUrl = `https://raw.githubusercontent.com/${OWNER}/${REPO}/${BRANCH}/${FOLDER}/${relPath}`;
-  const btn = event && event.currentTarget;
-  if (btn) { btn.disabled = true; btn.querySelector('.label').textContent = '⏳ 下载中…'; }
+  const label = btn ? btn.querySelector('.label') : null;
+  if (label) label.textContent = '⏳ 下载中…';
+  if (btn) btn.disabled = true;
   try {
     const res = await fetch(rawUrl);
-    if (!res.ok) throw new Error('HTTP '+res.status);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
     const blob = await res.blob();
     const objectUrl = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -79,13 +80,15 @@ async function downloadFile(relPath, name) {
     a.click();
     document.body.removeChild(a);
     setTimeout(() => URL.revokeObjectURL(objectUrl), 5000);
-    if (btn) { btn.querySelector('.label').textContent = '✅ 已下载'; }
+    if (label) label.textContent = '✅ 已下载';
   } catch (e) {
-    // 回退：直接打开 raw 链接（新标签页让用户手动保存）
-    if (btn) { btn.querySelector('.label').textContent = '⬇ 下载'; }
+    if (label) label.textContent = '⬇ 下载';
+    if (btn) btn.disabled = false;
     window.open(rawUrl, '_blank');
-    setStatus('err', 'JS 下载失败（'+e.message+'），已在新标签页打开 raw 链接，请长按/右键保存。');
+    setStatus('err', 'JS 下载失败（' + e.message + '），已在新标签页打开 raw 链接，请长按/右键保存。');
+    return;
   }
+  if (btn) btn.disabled = false;
 }
 
 function normalize(items) {
@@ -110,7 +113,6 @@ function render(files, sourceLabel) {
 
   list.forEach(f => {
     const relPath = (f.path||f.name).replace(/^\/+/,"");
-    const rawUrl = `https://raw.githubusercontent.com/${OWNER}/${REPO}/${BRANCH}/${FOLDER}/${relPath}`;
     const blobUrl = `https://github.com/${OWNER}/${REPO}/blob/${BRANCH}/${FOLDER}/${relPath}`;
 
     const card = document.createElement("article");
@@ -123,7 +125,7 @@ function render(files, sourceLabel) {
           <div class="fpath">${FOLDER}/${relPath}</div>
         </div>
       </div>
-      <div class="fsize">${humanSize(f.size)} · ${f.type==='dir'?'文件夹':'文件'} · ${fileIcon(f.name)}</div>
+      <div class="fsize">${humanSize(f.size)} · ${f.type==='dir'?'文件夹':'文件'}</div>
       <div class="actions">
         <button class="btn primary dl" data-rel="${relPath}" data-name="${f.name}">
           <span class="label">⬇ 下载</span>
@@ -134,9 +136,8 @@ function render(files, sourceLabel) {
         </a>
       </div>`;
     card.querySelector(".fname").textContent = f.name;
-    // 绑定 JS 下载
-    card.querySelector('button.dl').addEventListener('click', function(e) {
-      downloadFile(this.dataset.rel, this.dataset.name);
+    card.querySelector('button.dl').addEventListener('click', function() {
+      downloadFile(this.dataset.rel, this.dataset.name, this);
     });
     $list.appendChild(card);
   });
