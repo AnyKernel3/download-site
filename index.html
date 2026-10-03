@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#0f172a" />
+  <title>文件下载站 · e 目录</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%E2%8D%B2%3C/text%3E%3C/svg%3E" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo">⬇</span>
+      <div>
+        <h1>文件下载站</h1>
+        <p class="sub">实时展示 <code>e/</code> 目录内的文件，点击即可下载</p>
+      </div>
+    </div>
+    <div class="meta">
+      <span id="repoBadge" class="badge">正在加载仓库…</span>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="controls">
+      <div class="search">
+        <input id="search" type="search" placeholder="搜索文件…" autocomplete="off" aria-label="搜索文件" />
+      </div>
+      <button id="refresh" class="btn ghost">⟳ 刷新</button>
+    </section>
+
+    <p id="hint" class="hint"></p>
+    <div id="status" class="status" hidden></div>
+
+    <section id="list" class="grid" aria-live="polite">
+      <div class="empty" id="empty">
+        <div class="spinner"></div>
+        <p>正在加载 e 目录文件…</p>
+      </div>
+    </section>
+
+    <footer class="foot">
+      <p>数据来源：GitHub 仓库 <span id="footRepo">…</span> 的 <code>e/</code> 目录。向该目录添加文件后，刷新本页即可自动出现。</p>
+    </footer>
+  </main>
+
+  <script src="js/app.js"></script>
+</body>
+</html>
